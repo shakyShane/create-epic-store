@@ -32,7 +32,7 @@ export function createEpicStore(initialReducerTree: ReducerTree = {}, initialEpi
 
     (store as any).asyncReducers = {};
     (store as any).register = function (incoming) {
-        const {reducers, epics, middleware} = incoming;
+        const {reducers, epics, middleware, initEpic} = incoming;
         if (epics.length) {
             epics.forEach(epicFn => epic$.next(epicFn));
         }
@@ -44,6 +44,9 @@ export function createEpicStore(initialReducerTree: ReducerTree = {}, initialEpi
                     payload: reducerItem.initPayload,
                 });
             });
+        }
+        if (initEpic && typeof initEpic === 'function') {
+            epic$.next(initEpic);
         }
     };
 

@@ -29,7 +29,7 @@ function createEpicStore(initialReducerTree, initialEpics, dependencies) {
     var store = redux_1.createStore(createReducer(), composeEnhancers(redux_1.applyMiddleware(epicMiddleware)));
     store.asyncReducers = {};
     store.register = function (incoming) {
-        var reducers = incoming.reducers, epics = incoming.epics, middleware = incoming.middleware;
+        var reducers = incoming.reducers, epics = incoming.epics, middleware = incoming.middleware, initEpic = incoming.initEpic;
         if (epics.length) {
             epics.forEach(function (epicFn) { return epic$.next(epicFn); });
         }
@@ -41,6 +41,9 @@ function createEpicStore(initialReducerTree, initialEpics, dependencies) {
                     payload: reducerItem.initPayload,
                 });
             });
+        }
+        if (initEpic && typeof initEpic === 'function') {
+            epic$.next(initEpic);
         }
     };
     return store;
