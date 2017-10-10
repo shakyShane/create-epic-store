@@ -1,4 +1,4 @@
-import {createStore, applyMiddleware, compose, combineReducers, Action, Store, Reducer, ReducersMapObject} from 'redux';
+import {createStore, applyMiddleware, compose, combineReducers, Store, Reducer, ReducersMapObject} from 'redux';
 import {createEpicMiddleware, combineEpics, Epic, ActionsObservable} from 'redux-observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/mergeMap';
@@ -10,10 +10,16 @@ export type RegisterReducer = {
     initPayload?: any
 }
 
+export type EpicAction = {
+    type: string;
+    payload?: any;
+    meta?: any
+}
+
 export type RegisterObject = {
     reducers?: RegisterReducer[];
-    epics?: Epic<Action, any>[];
-    initEpic?: Epic<Action, any>;
+    epics?: Epic<EpicAction, any>[];
+    initEpic?: Epic<EpicAction, any>;
 }
 
 export type EpicStoreProps = {
@@ -22,11 +28,11 @@ export type EpicStoreProps = {
 
 export type EpicStore<T> = Store<T> & EpicStoreProps;
 
-export function createEpicStore(initialReducerTree: ReducersMapObject = {}, initialEpics: Epic<Action, any>[] = [], dependencies = {}) {
+export function createEpicStore(initialReducerTree: ReducersMapObject = {}, initialEpics: Epic<EpicAction, any>[] = [], dependencies = {}) {
 
     const epic$ = new BehaviorSubject(combineEpics(...initialEpics));
 
-    function rootEpic (action$: ActionsObservable<Action>, store: Store<any>, deps: {[index: string]: any}): any {
+    function rootEpic (action$: ActionsObservable<EpicAction>, store: Store<any>, deps: {[index: string]: any}): any {
         return epic$.flatMap((epic) => {
             return epic(action$, store, deps)
         })
