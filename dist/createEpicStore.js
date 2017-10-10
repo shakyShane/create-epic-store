@@ -29,18 +29,28 @@ function createEpicStore(initialReducerTree, initialEpics, dependencies) {
     var store = redux_1.createStore(createReducer(), composeEnhancers(redux_1.applyMiddleware(epicMiddleware)));
     store.asyncReducers = {};
     store.register = function (incoming) {
-        var reducers = incoming.reducers, epics = incoming.epics, middleware = incoming.middleware, initEpic = incoming.initEpic;
-        if (epics.length) {
-            epics.forEach(function (epicFn) { return epic$.next(epicFn); });
+        var reducers = incoming.reducers, epics = incoming.epics, initEpic = incoming.initEpic;
+        if (epics) {
+            if (Array.isArray(epics)) {
+                epics.forEach(function (epicFn) { return epic$.next(epicFn); });
+            }
+            else {
+                console.error("epics: must be an array of functions");
+            }
         }
-        if (reducers.length > 0) {
-            reducers.forEach(function (reducerItem) {
-                injectAsyncReducer(store, reducerItem.name, reducerItem.fn);
-                store.dispatch({
-                    type: "@@@AsyncModuleInit:" + reducerItem.name,
-                    payload: reducerItem.initPayload,
+        if (reducers) {
+            if (Array.isArray(reducers)) {
+                reducers.forEach(function (reducerItem) {
+                    injectAsyncReducer(store, reducerItem.name, reducerItem.fn);
+                    store.dispatch({
+                        type: "@@@AsyncModuleInit:" + reducerItem.name,
+                        payload: reducerItem.initPayload,
+                    });
                 });
-            });
+            }
+            else {
+                console.error("reducers: must be an array of reducer objects containing 'name', 'fn' and optionally 'initPayload'");
+            }
         }
         if (initEpic && typeof initEpic === 'function') {
             epic$.next(initEpic);

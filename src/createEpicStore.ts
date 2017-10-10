@@ -1,13 +1,27 @@
-import {createStore, applyMiddleware, compose, combineReducers, Action, Store, Reducer} from 'redux';
+import {createStore, applyMiddleware, compose, combineReducers, Action, Store, Reducer, ReducersMapObject} from 'redux';
 import {createEpicMiddleware, combineEpics, Epic, ActionsObservable} from 'redux-observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/mergeMap';
-import {Observable} from "rxjs/Observable";
 
-export type ReducerTree = {[index: string]: Reducer<any>}
-export type EpicFn = (action$?: Observable<Action>, store?: Store<any>, dependencies?: {[index: string]: any}) => Observable<Action>
+export type RegisterReducer = {
+    name: string,
+    fn: Reducer<any>,
+    initPayload?: any
+}
 
-export function createEpicStore(initialReducerTree: ReducerTree = {}, initialEpics: EpicFn[] = [], dependencies = {}) {
+export type RegisterObject = {
+    reducers?: RegisterReducer[];
+    epics?: Epic<Action, any>[];
+    initEpic?: Epic<Action, any>;
+}
+
+export type EpicStoreProps = {
+    register(props: RegisterObject): void;
+}
+
+export type EpicStore<T> = Store<T> & EpicStoreProps;
+
+export function createEpicStore(initialReducerTree: ReducersMapObject = {}, initialEpics: Epic<Action, any>[] = [], dependencies = {}) {
 
     const epic$ = new BehaviorSubject(combineEpics(...initialEpics));
 
@@ -31,19 +45,27 @@ export function createEpicStore(initialReducerTree: ReducerTree = {}, initialEpi
     );
 
     (store as any).asyncReducers = {};
-    (store as any).register = function (incoming) {
-        const {reducers, epics, middleware, initEpic} = incoming;
-        if (epics.length) {
-            epics.forEach(epicFn => epic$.next(epicFn));
+    (store as any).register = function (incoming: RegisterObject) {
+        const {reducers, epics, initEpic} = incoming;
+        if (epics) {
+            if (Array.isArray(epics)) {
+                epics.forEach(epicFn => epic$.next(epicFn));
+            } else {
+                console.error(`epics: must be an array of functions`);
+            }
         }
-        if (reducers.length > 0) {
-            reducers.forEach(reducerItem => {
-                injectAsyncReducer(store, reducerItem.name, reducerItem.fn);
-                store.dispatch({
-                    type: `@@@AsyncModuleInit:${reducerItem.name}`,
-                    payload: reducerItem.initPayload,
+        if (reducers) {
+            if (Array.isArray(reducers)) {
+                reducers.forEach(reducerItem => {
+                    injectAsyncReducer(store, reducerItem.name, reducerItem.fn);
+                    store.dispatch({
+                        type: `@@@AsyncModuleInit:${reducerItem.name}`,
+                        payload: reducerItem.initPayload,
+                    });
                 });
-            });
+            } else {
+                console.error(`reducers: must be an array of reducer objects containing 'name', 'fn' and optionally 'initPayload'`);
+            }
         }
         if (initEpic && typeof initEpic === 'function') {
             epic$.next(initEpic);
@@ -52,16 +74,16 @@ export function createEpicStore(initialReducerTree: ReducerTree = {}, initialEpi
 
     return store;
 
-    function createReducer(asyncReducers?) {
+    function createReducer(asyncReducers?: any) {
         return combineReducers({
             ...initialReducerTree,
             ...asyncReducers
         });
     }
 
-    function injectAsyncReducer(store, name, asyncReducer) {
-        store.asyncReducers[name] = asyncReducer;
-        store.replaceReducer(createReducer(store.asyncReducers));
+    function injectAsyncReducer(store: Store<any>, name: string, asyncReducer: Reducer<any>) {
+        (store as any).asyncReducers[name] = asyncReducer;
+        store.replaceReducer(createReducer((store as any).asyncReducers));
     }
 }
 
