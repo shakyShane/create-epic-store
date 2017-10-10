@@ -30,6 +30,9 @@ function createEpicStore(initialReducerTree, initialEpics, dependencies) {
     store.asyncReducers = {};
     store.register = function (incoming) {
         var reducers = incoming.reducers, epics = incoming.epics, middleware = incoming.middleware;
+        if (epics.length) {
+            epics.forEach(function (epicFn) { return epic$.next(epicFn); });
+        }
         if (reducers.length > 0) {
             reducers.forEach(function (reducerItem) {
                 injectAsyncReducer(store, reducerItem.name, reducerItem.fn);
@@ -38,9 +41,6 @@ function createEpicStore(initialReducerTree, initialEpics, dependencies) {
                     payload: reducerItem.initPayload,
                 });
             });
-        }
-        if (epics.length) {
-            epics.forEach(function (epicFn) { return epic$.next(epicFn); });
         }
     };
     return store;

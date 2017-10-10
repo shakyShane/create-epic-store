@@ -33,6 +33,9 @@ export function createEpicStore(initialReducerTree: ReducerTree = {}, initialEpi
     (store as any).asyncReducers = {};
     (store as any).register = function (incoming) {
         const {reducers, epics, middleware} = incoming;
+        if (epics.length) {
+            epics.forEach(epicFn => epic$.next(epicFn));
+        }
         if (reducers.length > 0) {
             reducers.forEach(reducerItem => {
                 injectAsyncReducer(store, reducerItem.name, reducerItem.fn);
@@ -41,9 +44,6 @@ export function createEpicStore(initialReducerTree: ReducerTree = {}, initialEpi
                     payload: reducerItem.initPayload,
                 });
             });
-        }
-        if (epics.length) {
-            epics.forEach(epicFn => epic$.next(epicFn));
         }
     };
 
