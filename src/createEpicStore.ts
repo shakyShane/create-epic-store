@@ -2,6 +2,7 @@ import {createStore, applyMiddleware, compose, combineReducers, Action, Store, R
 import {createEpicMiddleware, combineEpics, Epic, ActionsObservable} from 'redux-observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/mergeMap';
+import {empty} from "rxjs/observable/empty";
 
 export type RegisterReducer = {
     name: string,
@@ -28,7 +29,11 @@ export function createEpicStore(initialReducerTree: ReducersMapObject = {}, init
     function rootEpic (action$: ActionsObservable<Action>, store: Store<any>, deps: {[index: string]: any}): any {
         return epic$.flatMap((epic) => {
             return epic(action$, store, deps)
-        });
+        })
+        .catch((e: Error) => {
+            console.log('create-epic-store: Uncaught Error', e);
+            return empty();
+        })
     }
 
     const epicMiddleware = createEpicMiddleware(rootEpic, {
@@ -45,7 +50,7 @@ export function createEpicStore(initialReducerTree: ReducersMapObject = {}, init
     );
 
     (store as any).asyncReducers = {};
-    (store as any).register = function (incoming: RegisterObject) {
+    (store as any).register = function (incoming: RegisterObject, cb: Function = () => {/**/}) {
         const {reducers, epics, initEpic} = incoming;
         if (epics) {
             if (Array.isArray(epics)) {
@@ -68,7 +73,12 @@ export function createEpicStore(initialReducerTree: ReducersMapObject = {}, init
             }
         }
         if (initEpic && typeof initEpic === 'function') {
-            epic$.next(initEpic);
+            setTimeout(() => {
+                epic$.next(initEpic);
+                setTimeout(() => cb(), 0);
+            }, 0);
+        } else {
+            setTimeout(() => cb(), 0);
         }
     };
 
