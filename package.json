@@ -1,6 +1,6 @@
 {
   "name": "create-epic-store",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "peerDependencies": {
     "redux": "^3.7.2",
     "redux-observable": "^0.16.0",
