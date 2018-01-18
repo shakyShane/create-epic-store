@@ -1,6 +1,6 @@
 {
   "name": "create-epic-store",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "devDependencies": {
     "typescript": "^2.5.3",
     "redux": "^3.7.2",
