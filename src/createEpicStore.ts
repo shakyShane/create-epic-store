@@ -2,6 +2,7 @@ import {createStore, applyMiddleware, compose, combineReducers, Store, Reducer, 
 import {createEpicMiddleware, combineEpics, Epic, ActionsObservable} from 'redux-observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/catch';
 import {empty} from "rxjs/observable/empty";
 
 export type RegisterReducer = {
@@ -46,7 +47,12 @@ export function createEpicStore(initialReducerTree: ReducersMapObject = {}, init
         dependencies,
     });
 
-    const composeEnhancers = (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+    const composeEnhancers = (() => {
+        if (typeof window !== 'undefined') {
+            return window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+        }
+        return compose;
+    })();
 
     const store = createStore(
         createReducer(),

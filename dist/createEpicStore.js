@@ -12,6 +12,7 @@ var redux_1 = require("redux");
 var redux_observable_1 = require("redux-observable");
 var BehaviorSubject_1 = require("rxjs/BehaviorSubject");
 require("rxjs/add/operator/mergeMap");
+require("rxjs/add/operator/catch");
 var empty_1 = require("rxjs/observable/empty");
 function createEpicStore(initialReducerTree, initialEpics, dependencies) {
     if (initialReducerTree === void 0) { initialReducerTree = {}; }
@@ -30,7 +31,12 @@ function createEpicStore(initialReducerTree, initialEpics, dependencies) {
     var epicMiddleware = redux_observable_1.createEpicMiddleware(rootEpic, {
         dependencies: dependencies,
     });
-    var composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || redux_1.compose;
+    var composeEnhancers = (function () {
+        if (typeof window !== 'undefined') {
+            return window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || redux_1.compose;
+        }
+        return redux_1.compose;
+    })();
     var store = redux_1.createStore(createReducer(), composeEnhancers(redux_1.applyMiddleware(epicMiddleware)));
     store.asyncReducers = {};
     store.register = function (incoming, cb) {

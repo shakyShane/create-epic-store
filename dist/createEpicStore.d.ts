@@ -1,6 +1,7 @@
 import { Store, Reducer, ReducersMapObject } from 'redux';
 import { Epic } from 'redux-observable';
 import 'rxjs/add/operator/mergeMap';
+import 'rxjs/add/operator/catch';
 export declare type RegisterReducer = {
     name: string;
     fn: Reducer<any>;
