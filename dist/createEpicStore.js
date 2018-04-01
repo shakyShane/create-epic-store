@@ -14,10 +14,11 @@ var BehaviorSubject_1 = require("rxjs/BehaviorSubject");
 require("rxjs/add/operator/mergeMap");
 require("rxjs/add/operator/catch");
 var empty_1 = require("rxjs/observable/empty");
-function createEpicStore(initialReducerTree, initialEpics, dependencies) {
+function createEpicStore(initialReducerTree, initialEpics, dependencies, middlewares) {
     if (initialReducerTree === void 0) { initialReducerTree = {}; }
     if (initialEpics === void 0) { initialEpics = []; }
     if (dependencies === void 0) { dependencies = {}; }
+    if (middlewares === void 0) { middlewares = []; }
     var epic$ = new BehaviorSubject_1.BehaviorSubject(redux_observable_1.combineEpics.apply(void 0, initialEpics));
     function rootEpic(action$, store, deps) {
         return epic$.flatMap(function (epic) {
@@ -37,7 +38,7 @@ function createEpicStore(initialReducerTree, initialEpics, dependencies) {
         }
         return redux_1.compose;
     })();
-    var store = redux_1.createStore(createReducer(), composeEnhancers(redux_1.applyMiddleware(epicMiddleware)));
+    var store = redux_1.createStore(createReducer(), composeEnhancers(redux_1.applyMiddleware.apply(void 0, [epicMiddleware].concat(middlewares))));
     store.asyncReducers = {};
     store.register = function (incoming, cb) {
         if (cb === void 0) { cb = function () { }; }

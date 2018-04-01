@@ -1,4 +1,4 @@
-import { Store, Reducer, ReducersMapObject } from 'redux';
+import { Store, Reducer, ReducersMapObject, Middleware } from 'redux';
 import { Epic } from 'redux-observable';
 import 'rxjs/add/operator/mergeMap';
 import 'rxjs/add/operator/catch';
@@ -21,5 +21,5 @@ export declare type EpicStoreProps = {
     register(props: RegisterObject): void;
 };
 export declare type EpicStore<T> = Store<T> & EpicStoreProps;
-export declare function createEpicStore(initialReducerTree?: ReducersMapObject, initialEpics?: Epic<EpicAction, any>[], dependencies?: {}): Store<any>;
+export declare function createEpicStore(initialReducerTree?: ReducersMapObject, initialEpics?: Epic<EpicAction, any>[], dependencies?: {}, middlewares?: Middleware[]): Store<any>;
 export default createEpicStore;

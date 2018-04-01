@@ -1,4 +1,4 @@
-import {createStore, applyMiddleware, compose, combineReducers, Store, Reducer, ReducersMapObject} from 'redux';
+import {createStore, applyMiddleware, compose, combineReducers, Store, Reducer, ReducersMapObject, Middleware} from 'redux';
 import {createEpicMiddleware, combineEpics, Epic, ActionsObservable} from 'redux-observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import 'rxjs/add/operator/mergeMap';
@@ -29,7 +29,12 @@ export type EpicStoreProps = {
 
 export type EpicStore<T> = Store<T> & EpicStoreProps;
 
-export function createEpicStore(initialReducerTree: ReducersMapObject = {}, initialEpics: Epic<EpicAction, any>[] = [], dependencies = {}) {
+export function createEpicStore(
+    initialReducerTree: ReducersMapObject = {},
+    initialEpics: Epic<EpicAction, any>[] = [],
+    dependencies = {},
+    middlewares: Middleware[] = []
+    ) {
 
     const epic$ = new BehaviorSubject(combineEpics(...initialEpics));
 
@@ -57,7 +62,7 @@ export function createEpicStore(initialReducerTree: ReducersMapObject = {}, init
     const store = createStore(
         createReducer(),
         composeEnhancers(
-            applyMiddleware(epicMiddleware)
+            applyMiddleware(epicMiddleware, ...middlewares)
         )
     );
 
