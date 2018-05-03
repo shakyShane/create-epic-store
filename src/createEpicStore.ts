@@ -1,9 +1,7 @@
 import {createStore, applyMiddleware, compose, combineReducers, Store, Reducer, ReducersMapObject, Middleware} from 'redux';
-import {createEpicMiddleware, combineEpics, Epic, ActionsObservable} from 'redux-observable';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import 'rxjs/add/operator/mergeMap';
-import 'rxjs/add/operator/catch';
-import {empty} from "rxjs/observable/empty";
+import {createEpicMiddleware, combineEpics} from 'redux-observable';
+import { BehaviorSubject } from 'rxjs';
+import {mergeMap} from "rxjs/operators";
 
 export type RegisterReducer = {
     name: string,
@@ -19,8 +17,8 @@ export type EpicAction = {
 
 export type RegisterObject = {
     reducers?: RegisterReducer[];
-    epics?: Epic<EpicAction, any>[];
-    initEpic?: Epic<EpicAction, any>;
+    epics?: any;
+    initEpic?: any;
 }
 
 export type EpicStoreProps = {
@@ -31,30 +29,26 @@ export type EpicStore<T> = Store<T> & EpicStoreProps;
 
 export function createEpicStore(
     initialReducerTree: ReducersMapObject = {},
-    initialEpics: Epic<EpicAction, any>[] = [],
+    initialEpics: any[] = [],
     dependencies = {},
     middlewares: Middleware[] = []
     ) {
 
-    const epic$ = new BehaviorSubject(combineEpics(...initialEpics));
+    const epic$ = new BehaviorSubject(combineEpics(...initialEpics) as any);
 
-    function rootEpic (action$: ActionsObservable<EpicAction>, store: Store<any>, deps: {[index: string]: any}): any {
-        return epic$.flatMap((epic) => {
+    function rootEpic (action$: any, store: Store<any>, deps: {[index: string]: any}): any {
+        return epic$.pipe(mergeMap((epic) => {
             return epic(action$, store, deps)
-        })
-        .catch((e: Error) => {
-            console.log('create-epic-store: Uncaught Error', e);
-            return empty();
-        })
+        }));
     }
 
-    const epicMiddleware = createEpicMiddleware(rootEpic, {
+    const epicMiddleware = createEpicMiddleware(rootEpic as any, {
         dependencies,
-    });
+    } as any);
 
     const composeEnhancers = (() => {
         if (typeof window !== 'undefined') {
-            return window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
+            return (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
         }
         return compose;
     })();
